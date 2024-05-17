@@ -149,16 +149,18 @@ class ExactInference(InferenceModule):
         pacmanPosition = gameState.getPacmanPosition()
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-        # Replace this code with a correct observation update
-        # Be sure to handle the "jail" edge case where the ghost is eaten
-        # and noisyDistance is None
         allPossible = util.Counter()
-        for p in self.legalPositions:
-            trueDistance = util.manhattanDistance(p, pacmanPosition)
-            if emissionModel[trueDistance] > 0:
-                allPossible[p] = 1.0
+
+        # Si el fantasma ha sido capturado (noisyDistance es None)
+        if noisyDistance is None:
+            jailPosition = self.getJailPosition()
+            allPossible[jailPosition] = 1.0
+        else:
+            # Actualizar creencias basadas en el modelo de emision y la posicion de Pacman
+            for p in self.legalPositions:
+                trueDistance = util.manhattanDistance(p, pacmanPosition)
+                if emissionModel[trueDistance] > 0:
+                    allPossible[p] = self.beliefs[p] * emissionModel[trueDistance]
 
         "*** END YOUR CODE HERE ***"
 
@@ -219,7 +221,19 @@ class ExactInference(InferenceModule):
         positions after a time update from a particular position.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        newBeliefs = util.Counter()
+
+        # Iterar sobre todas las posiciones legales posibles del fantasma
+        for oldPos in self.legalPositions:
+            # Obtener la distribucion de nuevas posiciones desde oldPos
+            newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos))
+            
+            # Actualizar las creencias con las nuevas posiciones y sus probabilidades
+            for newPos, prob in newPosDist.items():
+                newBeliefs[newPos] += self.beliefs[oldPos] * prob
+
+        # Actualizar las creencias con las nuevas creencias
+        self.beliefs = newBeliefs
 
     def getBeliefDistribution(self):
         return self.beliefs
