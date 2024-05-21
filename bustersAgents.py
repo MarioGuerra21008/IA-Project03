@@ -132,35 +132,39 @@ class GreedyBustersAgent(BustersAgent):
         """
         First computes the most likely position of each ghost that has
         not yet been captured, then chooses an action that brings
-        Pacman closer to the closest ghost (according to mazeDistance!).
-
-        To find the mazeDistance between any two positions, use:
-          self.distancer.getDistance(pos1, pos2)
-
-        To find the successor position of a position after an action:
-          successorPosition = Actions.getSuccessor(position, action)
-
-        livingGhostPositionDistributions, defined below, is a list of
-        util.Counter objects equal to the position belief
-        distributions for each of the ghosts that are still alive.  It
-        is defined based on (these are implementation details about
-        which you need not be concerned):
-
-          1) gameState.getLivingGhosts(), a list of booleans, one for each
-             agent, indicating whether or not the agent is alive.  Note
-             that pacman is always agent 0, so the ghosts are agents 1,
-             onwards (just as before).
-
-          2) self.ghostBeliefs, the list of belief distributions for each
-             of the ghosts (including ghosts that are not alive).  The
-             indices into this list should be 1 less than indices into the
-             gameState.getLivingGhosts() list.
+        Pacman closest to the closest ghost (according to mazeDistance!).
         """
         pacmanPosition = gameState.getPacmanPosition()
-        legal = [a for a in gameState.getLegalPacmanActions()]
+        legalActions = gameState.getLegalPacmanActions()
         livingGhosts = gameState.getLivingGhosts()
-        livingGhostPositionDistributions = \
-            [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
-             if livingGhosts[i+1]]
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        # Get the positions of the living ghosts
+        livingGhostPositions = [
+            beliefs.argMax() 
+            for i, beliefs in enumerate(self.ghostBeliefs)
+            if livingGhosts[i + 1]
+        ]
+        
+        # Find the closest ghost position to Pacman
+        closestGhostDistance = float('inf')
+        closestGhostPosition = None
+        
+        for ghostPos in livingGhostPositions:
+            distanceToGhost = self.distancer.getDistance(pacmanPosition, ghostPos)
+            if distanceToGhost < closestGhostDistance:
+                closestGhostDistance = distanceToGhost
+                closestGhostPosition = ghostPos
+        
+        # Choose the action that minimizes the distance to the closest ghost
+        bestAction = None
+        minDistance = float('inf')
+        
+        for action in legalActions:
+            successorPosition = Actions.getSuccessor(pacmanPosition, action)
+            distanceToSuccessor = self.distancer.getDistance(successorPosition, closestGhostPosition)
+            if distanceToSuccessor < minDistance:
+                minDistance = distanceToSuccessor
+                bestAction = action
+        
+        return bestAction
+
