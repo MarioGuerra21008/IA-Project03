@@ -308,7 +308,7 @@ class ParticleFilter(InferenceModule):
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
 
-        # Caso especial 1: Si el fantasma ha sido capturado
+
         if noisyDistance is None:
             self.particles = [self.getJailPosition() for _ in range(self.numParticles)]
             return
@@ -321,7 +321,6 @@ class ParticleFilter(InferenceModule):
             if particle != jailPosition:
                 allPossible[particle] += emissionModel[trueDistance]
 
-        # Caso especial 2: Si todas las partículas reciben peso cero
         if allPossible.totalCount() == 0:
             self.initializeUniformly(gameState)
             return
